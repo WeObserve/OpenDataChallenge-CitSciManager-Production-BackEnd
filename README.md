@@ -5,7 +5,20 @@ Sarjom-ko are the seeds of the Sarjom tree.
 
 Sarjom is the name given to the tree [Shorea robusta](https://en.wikipedia.org/wiki/Shorea_robusta) in the "ho" language. Sarjom represents the guiding philosophy of our software development lifecycle. We want to grow slow like a tree while ensuring the growth and development of all other species, flora and fauna that make up our environment.
 
-# Open Source Contributors
+## Setup instructions
+You'll need the following:
+- Java Development Kit (JDK) / OpenJDK 8 minimum
+- MongoDB (running in replica set mode; [see instructions here](https://docs.mongodb.com/manual/tutorial/deploy-replica-set/))
+- Apache Maven
+- An HTTP request client (cURL/Postman etc.)
+
+Clone the repository and run `mvn clean install`.
+
+Create a database in MongoDB and define the same in `src/main/resources/application.properties`.
+
+Start the application with `mvn spring-boot:run`
+
+## Open Source Contributors
 * [Turam Purty](https://www.linkedin.com/in/turam27/)
 * [Anindya Pandey](https://www.linkedin.com/in/anindya-pandey-a73303b0/)
 * [Kiranmay KLC](https://www.linkedin.com/in/kiranmayiklc/)
@@ -22,3 +35,5 @@ Development is spread across individual branches/contributors. We merge changes 
 We are a research based lab, our goal is to first find out "gaps" in current systems and then use the most appropriate people and technologies to empower communities through open source development. If you want to contribute, please drop in an email at greendubs2020@gmail.com or check us out on our site.
 
 http://www.citsci.earth/join-us.html
+
+
