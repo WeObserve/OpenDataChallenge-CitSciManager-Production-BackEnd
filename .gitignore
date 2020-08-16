@@ -3,3 +3,14 @@
 target/
 HELP.md
 src/main/resources/application.properties
+.DS_Store
+.classpath
+.factorypath
+.project
+.settings/
+.vscode/
+src/.DS_Store
+src/main/.DS_Store
+src/main/java/.DS_Store
+src/main/java/com/.DS_Store
+src/main/java/com/sarjom/.DS_Store
