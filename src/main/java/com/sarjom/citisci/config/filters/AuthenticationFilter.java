@@ -12,6 +12,7 @@ import com.sarjom.citisci.cache.inmemory.bos.TokenIdToKeyMapCacheBO;
 import com.sarjom.citisci.dtos.ResponseDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -22,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 public class AuthenticationFilter implements Filter {
@@ -38,9 +40,12 @@ public class AuthenticationFilter implements Filter {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         HttpServletResponse httpServletResponse = (HttpServletResponse) response;
 
+        MDC.put("globalRequestId", UUID.randomUUID().toString());
+
         if (httpServletRequest.getRequestURI().equalsIgnoreCase("/login") ||
                 httpServletRequest.getRequestURI().equalsIgnoreCase("/user")) {
             filterChain.doFilter(request, response);
+            MDC.clear();
             return;
         }
 
@@ -49,6 +54,7 @@ public class AuthenticationFilter implements Filter {
 
         if (StringUtils.isEmpty(token) || StringUtils.isEmpty(tokenId)) {
             buildErrorResponse(httpServletResponse, "tokenId / token is empty string");
+            MDC.clear();
             return;
         }
 
@@ -58,6 +64,7 @@ public class AuthenticationFilter implements Filter {
 
         if (StringUtils.isEmpty(key)) {
             buildErrorResponse(httpServletResponse, "Invalid tokenId");
+            MDC.clear();
             return;
         }
 
@@ -67,6 +74,7 @@ public class AuthenticationFilter implements Filter {
 
             if (CollectionUtils.isEmpty(claims)) {
                 buildErrorResponse(httpServletResponse, "Invalid token");
+                MDC.clear();
                 return;
             }
 
@@ -74,16 +82,19 @@ public class AuthenticationFilter implements Filter {
 
             if (userBO == null) {
                 buildErrorResponse(httpServletResponse, "Invalid tokenId");
+                MDC.clear();
                 return;
             }
 
             httpServletRequest.setAttribute("user", userBO);
         } catch (Exception e) {
             buildErrorResponse(httpServletResponse, "Invalid token");
+            MDC.clear();
             return;
         }
 
         filterChain.doFilter(request, response);
+        MDC.clear();
     }
 
     private void buildErrorResponse(HttpServletResponse httpServletResponse, String errorMessage) throws IOException {
