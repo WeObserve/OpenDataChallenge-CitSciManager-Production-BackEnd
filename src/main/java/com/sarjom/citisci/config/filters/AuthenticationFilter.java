@@ -38,7 +38,8 @@ public class AuthenticationFilter implements Filter {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         HttpServletResponse httpServletResponse = (HttpServletResponse) response;
 
-        if (httpServletRequest.getRequestURI().equalsIgnoreCase("/login")) {
+        if (httpServletRequest.getRequestURI().equalsIgnoreCase("/login") ||
+                httpServletRequest.getRequestURI().equalsIgnoreCase("/user")) {
             filterChain.doFilter(request, response);
             return;
         }
