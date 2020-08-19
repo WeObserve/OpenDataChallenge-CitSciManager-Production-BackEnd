@@ -1,8 +1,11 @@
 package com.sarjom.citisci.bos;
 
+import com.sarjom.citisci.enums.Role;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -15,4 +18,6 @@ public class UserBO {
     String plainTextPassword;
     String orgName;
     String orgAffiliation;
+    Role role;
+    List<OrganisationBO> organisations;
 }

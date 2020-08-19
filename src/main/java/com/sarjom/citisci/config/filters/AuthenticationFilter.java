@@ -22,8 +22,10 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
+import java.util.List;
 
 @Component
 public class AuthenticationFilter implements Filter {
@@ -42,8 +44,9 @@ public class AuthenticationFilter implements Filter {
 
         MDC.put("globalRequestId", UUID.randomUUID().toString());
 
-        if (httpServletRequest.getRequestURI().equalsIgnoreCase("/login") ||
-                httpServletRequest.getRequestURI().equalsIgnoreCase("/user")) {
+        List<String> endpointsWithoutAuth = Arrays.asList("/login", "/sign-up-interest");
+
+        if (endpointsWithoutAuth.contains(httpServletRequest.getRequestURI())) {
             filterChain.doFilter(request, response);
             MDC.clear();
             return;

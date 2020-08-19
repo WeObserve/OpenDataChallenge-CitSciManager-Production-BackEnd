@@ -9,18 +9,10 @@ import org.bson.types.ObjectId;
 @Getter
 @Setter
 @ToString
-public class User {
+public class Organisation {
     @BsonProperty(value = "_id")
     public ObjectId id;
 
-    public String email;
-    public String password;
     public String name;
-    public String role;
-
-    @BsonProperty(value = "org_name")
-    public String orgName;
-
-    @BsonProperty(value = "org_affiliation")
-    public String orgAffiliation;
+    public String email;
 }

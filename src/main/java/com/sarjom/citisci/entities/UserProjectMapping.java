@@ -9,18 +9,13 @@ import org.bson.types.ObjectId;
 @Getter
 @Setter
 @ToString
-public class User {
+public class UserProjectMapping {
     @BsonProperty(value = "_id")
     public ObjectId id;
 
-    public String email;
-    public String password;
-    public String name;
-    public String role;
+    @BsonProperty(value = "user_id")
+    public ObjectId userId;
 
-    @BsonProperty(value = "org_name")
-    public String orgName;
-
-    @BsonProperty(value = "org_affiliation")
-    public String orgAffiliation;
+    @BsonProperty(value = "project_id")
+    public ObjectId projectId;
 }

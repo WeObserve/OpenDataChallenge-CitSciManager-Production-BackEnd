@@ -4,17 +4,24 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.sarjom.citisci.bos.OrganisationBO;
 import com.sarjom.citisci.bos.UserBO;
 import com.sarjom.citisci.cache.inmemory.InMemoryCache;
 import com.sarjom.citisci.cache.inmemory.bos.KeyToUserBOMapCacheBO;
 import com.sarjom.citisci.cache.inmemory.bos.TokenIdToKeyMapCacheBO;
 import com.sarjom.citisci.cache.inmemory.bos.UserIdToTokenIdMapCacheBO;
+import com.sarjom.citisci.db.mongo.daos.IOrganisationDAO;
 import com.sarjom.citisci.db.mongo.daos.IUserDAO;
+import com.sarjom.citisci.db.mongo.daos.IUserOrganisationMappingDAO;
 import com.sarjom.citisci.dtos.LoginRequestDTO;
 import com.sarjom.citisci.dtos.LoginResponseDTO;
+import com.sarjom.citisci.entities.Organisation;
 import com.sarjom.citisci.entities.User;
+import com.sarjom.citisci.entities.UserOrganisationMapping;
+import com.sarjom.citisci.enums.Role;
 import com.sarjom.citisci.services.ILoginService;
 import com.sarjom.citisci.services.utilities.IHashService;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,10 +30,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class LoginServiceImpl implements ILoginService {
@@ -40,6 +45,12 @@ public class LoginServiceImpl implements ILoginService {
 
     @Autowired
     IHashService hashService;
+
+    @Autowired
+    IUserOrganisationMappingDAO userOrganisationMappingDAO;
+
+    @Autowired
+    IOrganisationDAO organisationDAO;
 
     @Override
     public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) throws Exception {
@@ -129,44 +140,83 @@ public class LoginServiceImpl implements ILoginService {
         List<User> users = userDAO.getUsersByEmail(loginRequestDTO.getEmail());
         User user = users.get(0);
 
-        String jwtEncryptedPassword = loginRequestDTO.getJwtEncryptedPassword();
+        List<UserOrganisationMapping> userOrganisationMappings = userOrganisationMappingDAO.fetchByUserId(user.getId());
 
-        DecodedJWT decodedJWT = JWT.require(Algorithm.HMAC256(masterKey)).build().verify(jwtEncryptedPassword);
-        Map<String, Claim> claims = decodedJWT.getClaims();
-
-        if (CollectionUtils.isEmpty(claims) || !claims.containsKey("password")) {
-            throw new Exception("Password is invalid");
+        if (CollectionUtils.isEmpty(userOrganisationMappings)) {
+            throw new Exception("User is not linked to any organisation");
         }
 
-        Claim passwordClaim = claims.get("password");
-        String plainTextPassword = passwordClaim.asString();
-        String shaHashPassword = hashService.getSha256HexString(plainTextPassword);
+        List<ObjectId> organisationIds = userOrganisationMappings.stream().map(UserOrganisationMapping::getOrganisationId).collect(Collectors.toList());
+
+        List<Organisation> organisations = organisationDAO.fetchByIds(organisationIds);
+
+        if (CollectionUtils.isEmpty(organisations)) {
+            throw new Exception("User is not linked to any organisation");
+        }
+
+        String password = loginRequestDTO.getPassword();
+
+        String shaHashPassword = hashService.getSha256HexString(password);
 
         if (!user.getPassword().equalsIgnoreCase(shaHashPassword)) {
             throw new Exception("Incorrect password");
         }
 
-        return convertToUserBO(user);
+        return convertToUserBO(user, organisations);
     }
 
-    private UserBO convertToUserBO(User user) {
+    private UserBO convertToUserBO(User user, List<Organisation> organisations) {
         logger.info("Inside convertToUserBO");
 
         UserBO userBO = new UserBO();
         userBO.setId(user.getId().toHexString());
         userBO.setEmail(user.getEmail());
         userBO.setName(user.getName());
+        userBO.setRole(Role.valueOf(user.getRole()));
         userBO.setOrgAffiliation(user.getOrgAffiliation());
         userBO.setOrgName(user.getOrgAffiliation());
+        userBO.setOrganisations(convertToOrganisationBOs(organisations));
 
         return userBO;
     }
+
+    private List<OrganisationBO> convertToOrganisationBOs(List<Organisation> organisations) {
+        logger.info("Inside convertToOrganisationBOs");
+
+        List<OrganisationBO> organisationBOs = new ArrayList<>();
+
+        for (Organisation organisation: organisations) {
+            if (organisation == null ||
+                StringUtils.isEmpty(organisation.getName()) ||
+                StringUtils.isEmpty(organisation.getEmail()) ||
+                organisation.getId() == null) {
+                continue;
+            }
+
+            organisationBOs.add(convertToOrganisationBO(organisation));
+        }
+
+        return organisationBOs;
+    }
+
+    private OrganisationBO convertToOrganisationBO(Organisation organisation) {
+        logger.info("Inside convertToOrganisationBO");
+
+        OrganisationBO organisationBO = new OrganisationBO();
+
+        organisationBO.setId(organisation.getId().toHexString());
+        organisationBO.setEmail(organisation.getEmail());
+        organisationBO.setName(organisation.getName());
+
+        return organisationBO;
+    }
+
 
     private void validateLoginRequestDTO(LoginRequestDTO loginRequestDTO) throws Exception {
         logger.info("Inside validateLoginRequestDTO");
 
         if (loginRequestDTO == null || StringUtils.isEmpty(loginRequestDTO.getEmail()) ||
-            StringUtils.isEmpty(loginRequestDTO.getJwtEncryptedPassword())) {
+            StringUtils.isEmpty(loginRequestDTO.getPassword())) {
             throw new Exception("Invalid request");
         }
     }
