@@ -1,8 +1,7 @@
 package com.sarjom.citisci.controllers;
 
-import com.sarjom.citisci.dtos.CreateUserRequestDTO;
-import com.sarjom.citisci.dtos.CreateUserResponseDTO;
-import com.sarjom.citisci.dtos.ResponseDTO;
+import com.sarjom.citisci.bos.UserBO;
+import com.sarjom.citisci.dtos.*;
 import com.sarjom.citisci.services.IUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,25 +12,29 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/users")
 public class UserController {
     private static Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @Autowired
     IUserService userService;
 
-    @PostMapping("")
-    public ResponseDTO<CreateUserResponseDTO> createUser(HttpServletRequest httpServletRequest,
-                                                         @RequestBody CreateUserRequestDTO createUserRequestDTO,
+    @PostMapping("/invite")
+    public ResponseDTO<InviteUserResponseDTO> inviteUsers(HttpServletRequest httpServletRequest,
+                                                         @RequestBody InviteUserRequestDTO inviteUserRequestDTO,
                                                          HttpServletResponse httpServletResponse) {
-        logger.info("Inside createUser");
+        logger.info("Inside inviteUsers");
 
-        ResponseDTO<CreateUserResponseDTO> responseDTO = new ResponseDTO<>();
+        ResponseDTO<InviteUserResponseDTO> responseDTO = new ResponseDTO<>();
 
         try {
-            CreateUserResponseDTO createUserResponseDTO = userService.createUser(createUserRequestDTO);
+            UserBO userBO = (UserBO) httpServletRequest.getAttribute("user");
 
-            responseDTO.setResponse(createUserResponseDTO);
+            InviteUserResponseDTO inviteUserResponseDTO = userService.inviteUser(inviteUserRequestDTO, userBO);
+
+            userService.processInviteUsers(inviteUserRequestDTO, userBO);
+            
+            responseDTO.setResponse(inviteUserResponseDTO);
 
             responseDTO.setStatus("SUCCESS");
             return responseDTO;

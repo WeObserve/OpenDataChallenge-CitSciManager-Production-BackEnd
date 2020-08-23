@@ -16,8 +16,6 @@ public class UserBO {
     String email;
     String password;
     String plainTextPassword;
-    String orgName;
-    String orgAffiliation;
     Role role;
     List<OrganisationBO> organisations;
 }

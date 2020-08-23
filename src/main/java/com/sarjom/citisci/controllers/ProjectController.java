@@ -45,7 +45,7 @@ public class ProjectController {
 
     @GetMapping("")
     public ResponseDTO<FetchAllProjectsForUserResponseDTO> fetchAllProjectsForUser(HttpServletRequest httpServletRequest,
-                                                               HttpServletResponse httpServletResponse) {
+                                                                                   HttpServletResponse httpServletResponse) {
         logger.info("Inside fetchAllProjectsForUser");
 
         ResponseDTO<FetchAllProjectsForUserResponseDTO> responseDTO = new ResponseDTO<>();

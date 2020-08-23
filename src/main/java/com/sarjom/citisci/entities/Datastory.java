@@ -9,12 +9,17 @@ import org.bson.types.ObjectId;
 @Getter
 @Setter
 @ToString
-public class User {
+public class Datastory {
     @BsonProperty(value = "_id")
     public ObjectId id;
 
-    public String email;
-    public String password;
+    @BsonProperty(value = "project_id")
+    public ObjectId projectId;
+
+    @BsonProperty(value = "created_by_user_id")
+    public ObjectId createdByUserId;
+
     public String name;
-    public String role;
+    public String type;
+    public String content;
 }

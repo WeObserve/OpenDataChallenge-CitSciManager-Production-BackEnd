@@ -85,8 +85,6 @@ public class LoginServiceImpl implements ILoginService {
                     .withClaim("id", userBO.getId())
                     .withClaim("email", userBO.getEmail())
                     .withClaim("name", userBO.getName())
-                    .withClaim("orgName", userBO.getOrgName())
-                    .withClaim("orgAffiliation", userBO.getOrgAffiliation())
                     .sign(algorithm1);
 
             userIdToTokenIdMapCacheBO.set(userBO.getId(), tokenId);
@@ -106,8 +104,6 @@ public class LoginServiceImpl implements ILoginService {
                     .withClaim("id", userBO.getId())
                     .withClaim("email", userBO.getEmail())
                     .withClaim("name", userBO.getName())
-                    .withClaim("orgName", userBO.getOrgName())
-                    .withClaim("orgAffiliation", userBO.getOrgAffiliation())
                     .sign(algorithm1);
 
             tokenIdToKeyMapCacheBO.set(loginResponseDTO.getTokenId(), uuid);
@@ -124,8 +120,6 @@ public class LoginServiceImpl implements ILoginService {
                 .withClaim("id", userBO.getId())
                 .withClaim("email", userBO.getEmail())
                 .withClaim("name", userBO.getName())
-                .withClaim("orgName", userBO.getOrgName())
-                .withClaim("orgAffiliation", userBO.getOrgAffiliation())
                 .sign(algorithm1);
         keyToUserBOMapCacheBO.set(uuid, userBO);
 
@@ -173,8 +167,6 @@ public class LoginServiceImpl implements ILoginService {
         userBO.setEmail(user.getEmail());
         userBO.setName(user.getName());
         userBO.setRole(Role.valueOf(user.getRole()));
-        userBO.setOrgAffiliation(user.getOrgAffiliation());
-        userBO.setOrgName(user.getOrgAffiliation());
         userBO.setOrganisations(convertToOrganisationBOs(organisations));
 
         return userBO;

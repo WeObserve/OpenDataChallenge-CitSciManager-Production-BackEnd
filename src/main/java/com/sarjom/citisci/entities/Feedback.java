@@ -9,12 +9,12 @@ import org.bson.types.ObjectId;
 @Getter
 @Setter
 @ToString
-public class User {
+public class Feedback {
     @BsonProperty(value = "_id")
     public ObjectId id;
 
-    public String email;
-    public String password;
-    public String name;
-    public String role;
+    @BsonProperty(value = "user_id")
+    public ObjectId userId;
+
+    public String comments;
 }

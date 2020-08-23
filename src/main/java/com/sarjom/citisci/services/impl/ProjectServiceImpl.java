@@ -2,12 +2,16 @@ package com.sarjom.citisci.services.impl;
 
 import com.sarjom.citisci.bos.ProjectBO;
 import com.sarjom.citisci.bos.UserBO;
+import com.sarjom.citisci.db.mongo.daos.IOrganisationDAO;
 import com.sarjom.citisci.db.mongo.daos.IProjectDAO;
+import com.sarjom.citisci.db.mongo.daos.IUserOrganisationMappingDAO;
 import com.sarjom.citisci.db.mongo.daos.IUserProjectMappingDAO;
 import com.sarjom.citisci.dtos.CreateProjectRequestDTO;
 import com.sarjom.citisci.dtos.CreateProjectResponseDTO;
 import com.sarjom.citisci.dtos.FetchAllProjectsForUserResponseDTO;
+import com.sarjom.citisci.entities.Organisation;
 import com.sarjom.citisci.entities.Project;
+import com.sarjom.citisci.entities.UserOrganisationMapping;
 import com.sarjom.citisci.entities.UserProjectMapping;
 import com.sarjom.citisci.enums.ProjectType;
 import com.sarjom.citisci.enums.Role;
@@ -23,6 +27,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,6 +41,10 @@ public class ProjectServiceImpl implements IProjectService {
     IUserProjectMappingDAO userProjectMappingDAO;
     @Autowired
     IProjectTransService projectTransService;
+    @Autowired
+    IOrganisationDAO organisationDAO;
+    @Autowired
+    IUserOrganisationMappingDAO userOrganisationMappingDAO;
 
     @Override
     public CreateProjectResponseDTO createProject(CreateProjectRequestDTO createProjectRequestDTO, UserBO userBO) throws Exception {
@@ -45,7 +54,7 @@ public class ProjectServiceImpl implements IProjectService {
             throw new Exception("User not authorized to create projects");
         }
 
-        validateCreateProjectRequestDTO(createProjectRequestDTO);
+        validateCreateProjectRequestDTO(createProjectRequestDTO, userBO);
 
         checkThatProjectWithThisNameDoesntExist(createProjectRequestDTO);
 
@@ -77,7 +86,7 @@ public class ProjectServiceImpl implements IProjectService {
         return projectBO;
     }
 
-    private void validateCreateProjectRequestDTO(CreateProjectRequestDTO createProjectRequestDTO) throws Exception {
+    private void validateCreateProjectRequestDTO(CreateProjectRequestDTO createProjectRequestDTO, UserBO userBO) throws Exception {
         logger.info("Inside validateCreateProjectRequestDTO");
 
         if (createProjectRequestDTO == null ||
@@ -87,6 +96,35 @@ public class ProjectServiceImpl implements IProjectService {
                 StringUtils.isEmpty(createProjectRequestDTO.getLicense()) ||
                 createProjectRequestDTO.getProjectType() == null) {
             throw new Exception("Invalid create project request");
+        }
+
+        if (!createProjectRequestDTO.getCreatedByUserId().equalsIgnoreCase(userBO.getId())) {
+            throw new Exception("Id of user creating the project is not the one making the request");
+        }
+
+        checkThatOrganisationWithGivenIdExists(new ObjectId(createProjectRequestDTO.getOrganisationId()));
+        checkThatUserIdIsLinkedToOrganisationId(new ObjectId(createProjectRequestDTO.getOrganisationId()),
+                new ObjectId(userBO.getId()));
+    }
+
+    private void checkThatOrganisationWithGivenIdExists(ObjectId orgId) throws Exception {
+        logger.info("Inside checkThatOrganisationwithGivenIdExists");
+
+        List<Organisation> organisations = organisationDAO.fetchByIds(Arrays.asList(orgId));
+
+        if (CollectionUtils.isEmpty(organisations)) {
+            throw new Exception("No organisation with given id");
+        }
+    }
+
+    private void checkThatUserIdIsLinkedToOrganisationId(ObjectId orgId, ObjectId userId) throws Exception {
+        logger.info("Inside checkThatUserIdIsLinkedToOrganisationId");
+
+        List<UserOrganisationMapping> userOrganisationMappings = userOrganisationMappingDAO.
+                fetchByOrgIdAndUserId(orgId, userId);
+
+        if (CollectionUtils.isEmpty(userOrganisationMappings)) {
+            throw new Exception("Organisation and user are not linked");
         }
     }
 

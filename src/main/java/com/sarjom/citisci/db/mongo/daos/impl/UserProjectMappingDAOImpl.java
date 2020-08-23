@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +64,21 @@ public class UserProjectMappingDAOImpl implements IUserProjectMappingDAO {
 
         BasicDBObject basicDBObject = new BasicDBObject();
         basicDBObject.put("user_id", userId);
+
+        return getCollection().find(basicDBObject).into(new ArrayList<>());
+    }
+
+    @Override
+    public List<UserProjectMapping> fetchByProjectIdAndUserIds(ObjectId projectId, List<ObjectId> userIds) throws Exception {
+        logger.info("Inside fetchByUserId");
+
+        if (projectId == null || CollectionUtils.isEmpty(userIds)) {
+            return new ArrayList<>();
+        }
+
+        BasicDBObject basicDBObject = new BasicDBObject();
+        basicDBObject.put("user_id", new BasicDBObject("$in", userIds));
+        basicDBObject.put("project_id", projectId);
 
         return getCollection().find(basicDBObject).into(new ArrayList<>());
     }

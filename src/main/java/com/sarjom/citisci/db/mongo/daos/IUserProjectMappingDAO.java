@@ -9,4 +9,5 @@ import java.util.List;
 public interface IUserProjectMappingDAO {
     void createUserProjectMapping(UserProjectMapping userProjectMapping, ClientSession clientSession) throws Exception;
     List<UserProjectMapping> fetchByUserId(ObjectId userId) throws Exception;
+    List<UserProjectMapping> fetchByProjectIdAndUserIds(ObjectId projectId, List<ObjectId> userIds) throws Exception;
 }
