@@ -1,14 +1,12 @@
 package com.sarjom.citisci.bos;
 
 import com.sarjom.citisci.enums.FileType;
-import com.sun.xml.internal.ws.api.ha.StickyFeature;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.Map;
 
 @Getter
 @Setter
