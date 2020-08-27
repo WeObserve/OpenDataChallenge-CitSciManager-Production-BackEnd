@@ -45,6 +45,8 @@ public class AuthenticationFilter implements Filter {
 
         MDC.put("globalRequestId", UUID.randomUUID().toString());
 
+        logger.info("request: {}", httpServletRequest.getRequestURI());
+
         List<String> endpointsWithoutAuth = Arrays.asList("/login", "/sign-up-interest");
 
         if (httpServletRequest.getMethod().equals(HttpMethod.OPTIONS.name())) {
@@ -62,6 +64,8 @@ public class AuthenticationFilter implements Filter {
         String token = httpServletRequest.getHeader("token");
         String tokenId = httpServletRequest.getHeader("tokenId");
 
+        logger.info("Token: {}, tokenId: {}", token, tokenId);
+
         if (StringUtils.isEmpty(token) || StringUtils.isEmpty(tokenId)) {
             buildErrorResponse(httpServletResponse, "tokenId / token is empty string");
             MDC.clear();
@@ -72,7 +76,10 @@ public class AuthenticationFilter implements Filter {
 
         String key = tokenIdToKeyMapCacheBO.get(tokenId);
 
+        logger.info("key: {}", key);
+
         if (StringUtils.isEmpty(key)) {
+            logger.error("No key found");
             buildErrorResponse(httpServletResponse, "Invalid tokenId");
             MDC.clear();
             return;
@@ -83,6 +90,7 @@ public class AuthenticationFilter implements Filter {
             Map<String, Claim> claims = decodedJWT.getClaims();
 
             if (CollectionUtils.isEmpty(claims)) {
+                logger.error("Invalid token due to jwt decode claims are empty");
                 buildErrorResponse(httpServletResponse, "Invalid token");
                 MDC.clear();
                 return;
@@ -91,6 +99,7 @@ public class AuthenticationFilter implements Filter {
             UserBO userBO = InMemoryCache.getInMemoryCache().get(KeyToUserBOMapCacheBO.class).get(key);
 
             if (userBO == null) {
+                logger.error("userBO is null");
                 buildErrorResponse(httpServletResponse, "Invalid tokenId");
                 MDC.clear();
                 return;
@@ -98,6 +107,7 @@ public class AuthenticationFilter implements Filter {
 
             httpServletRequest.setAttribute("user", userBO);
         } catch (Exception e) {
+            logger.error("", e);
             buildErrorResponse(httpServletResponse, "Invalid token");
             MDC.clear();
             return;
