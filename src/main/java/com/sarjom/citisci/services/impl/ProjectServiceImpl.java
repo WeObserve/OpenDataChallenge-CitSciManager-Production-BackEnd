@@ -1,5 +1,6 @@
 package com.sarjom.citisci.services.impl;
 
+import com.sarjom.citisci.bos.OrganisationBO;
 import com.sarjom.citisci.bos.ProjectBO;
 import com.sarjom.citisci.bos.UserBO;
 import com.sarjom.citisci.db.mongo.daos.IOrganisationDAO;
@@ -26,9 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -160,8 +159,30 @@ public class ProjectServiceImpl implements IProjectService {
         return fetchAllProjectsForUserResponseDTO;
     }
 
-    private void populateProjectBOs(List<Project> projects, List<ProjectBO> projectBOs) {
+    private void populateProjectBOs(List<Project> projects, List<ProjectBO> projectBOs) throws Exception {
         logger.info("Inside populateProjectBOs");
+
+        List<ObjectId> organisationIds = new ArrayList<>();
+
+        for (Project project: projects) {
+            if (project == null || StringUtils.isEmpty(project.getName()) ||
+                    project.getId() == null || project.getOrganisationId() == null ||
+                    project.getCreatedByUserId() == null || StringUtils.isEmpty(project.getProjectType())) {
+                continue;
+            }
+
+            organisationIds.add(project.getOrganisationId());
+        }
+
+        List<Organisation> organisations = organisationDAO.fetchByIds(organisationIds);
+
+        Map<String, OrganisationBO> organisationIdToOrganisationBOMap = new HashMap<>();
+
+        for (Organisation organisation: organisations) {
+            organisationIdToOrganisationBOMap.put(organisation.getId().toHexString(),
+                    convertToOrganisationBO(organisation));
+        }
+
 
         for (Project project: projects) {
             if (project == null || StringUtils.isEmpty(project.getName()) ||
@@ -170,11 +191,11 @@ public class ProjectServiceImpl implements IProjectService {
                 continue;
             }
 
-            projectBOs.add(convertToProjectBO(project));
+            projectBOs.add(convertToProjectBO(project, organisationIdToOrganisationBOMap));
         }
     }
 
-    private ProjectBO convertToProjectBO(Project project) {
+    private ProjectBO convertToProjectBO(Project project, Map<String, OrganisationBO> organisationIdToOrganisationBOMap) {
         logger.info("Inside convertToProjectBO");
 
         ProjectBO projectBO = new ProjectBO();
@@ -185,7 +206,22 @@ public class ProjectServiceImpl implements IProjectService {
         projectBO.setOrganisationId(project.getOrganisationId().toHexString());
         projectBO.setCreatedByUserId(project.getCreatedByUserId().toHexString());
         projectBO.setProjectType(ProjectType.valueOf(project.getProjectType()));
+        projectBO.setOrganisation(organisationIdToOrganisationBOMap.get(
+                projectBO.getOrganisationId()
+        ));
 
         return projectBO;
+    }
+
+    private OrganisationBO convertToOrganisationBO(Organisation organisation) {
+        logger.info("Inside convertToOrganisationBO");
+
+        OrganisationBO organisationBO = new OrganisationBO();
+
+        organisationBO.setId(organisation.getId().toHexString());
+        organisationBO.setEmail(organisation.getEmail());
+        organisationBO.setName(organisation.getName());
+
+        return organisationBO;
     }
 }

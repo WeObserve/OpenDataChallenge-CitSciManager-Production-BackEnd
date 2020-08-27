@@ -21,4 +21,5 @@ public class ProjectBO {
     public List<String> dataTypes;
     public List<String> metaData;
     public ProjectType projectType;
+    public OrganisationBO organisation;
 }
