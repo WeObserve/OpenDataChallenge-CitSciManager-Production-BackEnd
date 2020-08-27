@@ -13,6 +13,7 @@ import com.sarjom.citisci.dtos.ResponseDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -45,6 +46,12 @@ public class AuthenticationFilter implements Filter {
         MDC.put("globalRequestId", UUID.randomUUID().toString());
 
         List<String> endpointsWithoutAuth = Arrays.asList("/login", "/sign-up-interest");
+
+        if (httpServletRequest.getMethod().equals(HttpMethod.OPTIONS.name())) {
+            httpServletResponse.setStatus(HttpStatus.OK.value());
+            MDC.clear();
+            return;
+        }
 
         if (endpointsWithoutAuth.contains(httpServletRequest.getRequestURI())) {
             filterChain.doFilter(request, response);
