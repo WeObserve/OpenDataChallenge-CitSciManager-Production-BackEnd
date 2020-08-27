@@ -38,7 +38,7 @@ public class CORSFilter implements Filter {
         httpServletResponse.setHeader("Content-Security-Policy", "default-src 'self'");
 
         if (httpServletRequest.getMethod().equals(HttpMethod.OPTIONS.name())) {
-            httpServletResponse.setStatus(HttpStatus.NO_CONTENT.value());
+            httpServletResponse.setStatus(HttpStatus.OK.value());
         }
 
         filterChain.doFilter(request, response);
