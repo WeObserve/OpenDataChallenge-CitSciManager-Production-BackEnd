@@ -7,6 +7,7 @@ import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 @Getter
 @Setter
@@ -22,7 +23,7 @@ public class FileBO {
     public BigDecimal latitude;
     public BigDecimal longitude;
     public Date createdAt;
-    public String customTags;
+    public List<String> customTags;
     public FileType fileType;
     public UserBO uploadedByUser;
 }

@@ -8,6 +8,7 @@ import org.bson.types.ObjectId;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 @Getter
 @Setter
@@ -34,7 +35,7 @@ public class File {
     public Date createdAt;
 
     @BsonProperty(value = "custom_tags")
-    public String customTags;
+    public List<String> customTags;
 
     public String license;
     public String comments;
