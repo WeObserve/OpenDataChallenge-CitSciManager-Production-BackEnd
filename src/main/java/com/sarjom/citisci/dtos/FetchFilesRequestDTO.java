@@ -7,10 +7,6 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class CreateDatastoryRequestDTO {
+public class FetchFilesRequestDTO {
     public String projectId;
-    public String name;
-    public String type;
-    public String content;
-    public Boolean isDraft;
 }

@@ -6,9 +6,7 @@ import com.sarjom.citisci.db.mongo.daos.IFileDAO;
 import com.sarjom.citisci.db.mongo.daos.IProjectDAO;
 import com.sarjom.citisci.db.mongo.daos.IUserDAO;
 import com.sarjom.citisci.db.mongo.daos.IUserProjectMappingDAO;
-import com.sarjom.citisci.dtos.CreateFileRequestDTO;
-import com.sarjom.citisci.dtos.CreateFileResponseDTO;
-import com.sarjom.citisci.dtos.DownloadFilesResponseDTO;
+import com.sarjom.citisci.dtos.*;
 import com.sarjom.citisci.entities.*;
 import com.sarjom.citisci.enums.FileType;
 import com.sarjom.citisci.enums.Role;
@@ -219,5 +217,70 @@ public class FileServiceImpl implements IFileService {
         }
 
         return projects.get(0);
+    }
+
+    @Override
+    public FetchFilesResponseDTO fetchFilesForProject(FetchFilesRequestDTO fetchFilesRequestDTO, UserBO userBO) throws Exception {
+        logger.info("Inside fetchFilesForProject");
+
+        FetchFilesResponseDTO fetchFilesResponseDTO = new FetchFilesResponseDTO();
+
+        validateFetchFilesRequestDTO(fetchFilesRequestDTO, userBO);
+
+        List<File> files = fileDAO.fetchByProjectId(new ObjectId(fetchFilesRequestDTO.getProjectId()));
+
+        if (CollectionUtils.isEmpty(files)) {
+            return fetchFilesResponseDTO;
+        }
+
+        List<ObjectId> userIds = new ArrayList<>();
+
+        for (File file: files) {
+            if (!CollectionUtils.isEmpty(userIds) &&
+                    userIds.contains(file.getUploadedByUserId())) {
+                continue;
+            }
+
+            userIds.add(file.getUploadedByUserId());
+        }
+
+        List<User> users = userDAO.getUsersByIds(userIds);
+
+        Map<String, UserBO> userIdToUserBOMap = new HashMap<>();
+
+        for (User user: users) {
+            userIdToUserBOMap.put(user.getId().toHexString(), convertToUserBO(user));
+        }
+
+        List<FileBO> fileBOs = new ArrayList<>();
+
+        for (File file: files) {
+            fileBOs.add(convertToFileBO(file, userIdToUserBOMap));
+        }
+
+        fetchFilesResponseDTO.setFiles(fileBOs);
+
+        return fetchFilesResponseDTO;
+    }
+
+    private void validateFetchFilesRequestDTO(FetchFilesRequestDTO fetchFilesRequestDTO, UserBO userBO) throws Exception {
+        logger.info("Inside validateFetchFilesRequestDTO");
+
+        if (fetchFilesRequestDTO == null ||
+                StringUtils.isEmpty(fetchFilesRequestDTO.getProjectId())) {
+            throw new Exception("Invalid request");
+        }
+
+        if (userBO == null) {
+            throw new Exception("Please login again");
+        }
+
+        if (userBO.getRole() == null || !userBO.getRole().name().equalsIgnoreCase(Role.COLLECTOR.name())) {
+            throw new Exception("User must be a collector to view project files");
+        }
+
+        checkThatProjectExists(new ObjectId(fetchFilesRequestDTO.getProjectId()));
+        checkThatUserAndProjectAreLinked(new ObjectId(fetchFilesRequestDTO.getProjectId()),
+                new ObjectId(userBO.getId()));
     }
 }

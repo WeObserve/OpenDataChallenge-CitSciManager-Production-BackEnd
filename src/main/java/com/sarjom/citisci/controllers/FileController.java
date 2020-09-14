@@ -42,7 +42,7 @@ public class FileController {
 
     @GetMapping(value = "/{projectId}")
     public ResponseDTO<DownloadFilesResponseDTO> downloadFiles(HttpServletRequest httpServletRequest, @PathVariable("projectId") String projectId) {
-        logger.info("Inside createFile");
+        logger.info("Inside downloadFiles");
 
         ResponseDTO<DownloadFilesResponseDTO> responseDTO = new ResponseDTO<>();
 
@@ -56,6 +56,29 @@ public class FileController {
             downloadFilesResponseDTO.setProject(null);
 
             responseDTO.setResponse(downloadFilesResponseDTO);
+
+            responseDTO.setStatus("SUCCESS");
+            return responseDTO;
+        } catch (Exception e) {
+            responseDTO.setReason(e.getMessage());
+            responseDTO.setStatus("FAILED");
+            return responseDTO;
+        }
+    }
+
+    @PostMapping(value = "/fetch")
+    public ResponseDTO<FetchFilesResponseDTO> fetchFiles(HttpServletRequest httpServletRequest,
+                                                         @RequestBody FetchFilesRequestDTO fetchFilesRequestDTO) {
+        logger.info("Inside fetchFiles");
+
+        ResponseDTO<FetchFilesResponseDTO> responseDTO = new ResponseDTO<>();
+
+        try {
+            UserBO userBO = (UserBO) httpServletRequest.getAttribute("user");
+
+            FetchFilesResponseDTO fetchFilesResponseDTO = fileService.fetchFilesForProject(fetchFilesRequestDTO, userBO);
+
+            responseDTO.setResponse(fetchFilesResponseDTO);
 
             responseDTO.setStatus("SUCCESS");
             return responseDTO;

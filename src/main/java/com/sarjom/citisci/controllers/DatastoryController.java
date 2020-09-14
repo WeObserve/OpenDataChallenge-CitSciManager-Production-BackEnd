@@ -1,10 +1,7 @@
 package com.sarjom.citisci.controllers;
 
 import com.sarjom.citisci.bos.UserBO;
-import com.sarjom.citisci.dtos.CreateDatastoryRequestDTO;
-import com.sarjom.citisci.dtos.CreateDatastoryResponseDTO;
-import com.sarjom.citisci.dtos.ResponseDTO;
-import com.sarjom.citisci.dtos.ViewDatastoryResponseDTO;
+import com.sarjom.citisci.dtos.*;
 import com.sarjom.citisci.services.IDatastoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +29,9 @@ public class DatastoryController {
 
             CreateDatastoryResponseDTO createDatastoryResponseDTO = datastoryService.createDatastory(createDatastoryRequestDTO, userBO);
 
-            datastoryService.sendDatastoryPublishedEmails(createDatastoryResponseDTO.getCreatedDatastory());
+            if (!createDatastoryResponseDTO.getCreatedDatastory().getIsDraft()) {
+                datastoryService.sendDatastoryPublishedEmails(createDatastoryResponseDTO.getCreatedDatastory());
+            }
 
             responseDTO.setResponse(createDatastoryResponseDTO);
 
@@ -58,6 +57,56 @@ public class DatastoryController {
             ViewDatastoryResponseDTO viewDatastoryResponseDTO = datastoryService.viewDatastory(datastoryId, userBO);
 
             responseDTO.setResponse(viewDatastoryResponseDTO);
+
+            responseDTO.setStatus("SUCCESS");
+            return responseDTO;
+        } catch (Exception e) {
+            responseDTO.setReason(e.getMessage());
+            responseDTO.setStatus("FAILED");
+            return responseDTO;
+        }
+    }
+
+    @GetMapping(value = "/fetch-list-for-project/{projectId}")
+    public ResponseDTO<FetchDatastoryResponseDTO> fetchDatastoriesForProject(HttpServletRequest httpServletRequest,
+                                                                             @PathVariable("projectId") String projectId) {
+        logger.info("Inside fetchDatastoriesForProject");
+
+        ResponseDTO<FetchDatastoryResponseDTO> responseDTO = new ResponseDTO<>();
+
+        try {
+            UserBO userBO = (UserBO) httpServletRequest.getAttribute("user");
+
+            FetchDatastoryResponseDTO fetchDatastoryResponseDTO = datastoryService.fetchDatastoriesForProject(projectId, userBO);
+
+            responseDTO.setResponse(fetchDatastoryResponseDTO);
+
+            responseDTO.setStatus("SUCCESS");
+            return responseDTO;
+        } catch (Exception e) {
+            responseDTO.setReason(e.getMessage());
+            responseDTO.setStatus("FAILED");
+            return responseDTO;
+        }
+    }
+
+    @PutMapping(value = "/publish-draft/{datastoryId}")
+    public ResponseDTO<PublishDraftDatastoryResponseDTO> publishDraftDatastory(HttpServletRequest httpServletRequest,
+                                                               @PathVariable("datastoryId") String datastoryId) {
+        logger.info("Inside publishDraftDatastory");
+
+        ResponseDTO<PublishDraftDatastoryResponseDTO> responseDTO = new ResponseDTO<>();
+
+        try {
+            UserBO userBO = (UserBO) httpServletRequest.getAttribute("user");
+
+            PublishDraftDatastoryResponseDTO publishDraftDatastoryResponseDTO = datastoryService.convertDraftToPublishedDatastory(datastoryId, userBO);
+
+            if (!publishDraftDatastoryResponseDTO.getPublishedDatastory().getIsDraft()) {
+                datastoryService.sendDatastoryPublishedEmails(publishDraftDatastoryResponseDTO.getPublishedDatastory());
+            }
+
+            responseDTO.setResponse(publishDraftDatastoryResponseDTO);
 
             responseDTO.setStatus("SUCCESS");
             return responseDTO;

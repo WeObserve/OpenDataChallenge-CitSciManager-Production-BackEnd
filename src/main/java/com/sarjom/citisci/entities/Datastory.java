@@ -22,4 +22,7 @@ public class Datastory {
     public String name;
     public String type;
     public String content;
+
+    @BsonProperty(value = "is_draft")
+    public Boolean isDraft;
 }

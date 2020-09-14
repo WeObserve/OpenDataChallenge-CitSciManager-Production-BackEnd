@@ -19,4 +19,5 @@ public class DatastoryBO {
     public List<FileBO> files;
     public UserBO createdByUser;
     public ProjectBO project;
+    public Boolean isDraft;
 }

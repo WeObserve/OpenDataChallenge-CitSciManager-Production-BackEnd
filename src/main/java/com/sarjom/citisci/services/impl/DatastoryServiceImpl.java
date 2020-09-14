@@ -259,6 +259,7 @@ public class DatastoryServiceImpl implements IDatastoryService {
         datastory.setId(new ObjectId());
         datastory.setProjectId(new ObjectId(createDatastoryRequestDTO.getProjectId()));
         datastory.setCreatedByUserId(new ObjectId(userBO.getId()));
+        datastory.setIsDraft(createDatastoryRequestDTO.getIsDraft());
 
         return datastory;
     }
@@ -269,7 +270,8 @@ public class DatastoryServiceImpl implements IDatastoryService {
         if (createDatastoryRequestDTO == null ||
                 StringUtils.isEmpty(createDatastoryRequestDTO.getProjectId()) ||
                 StringUtils.isEmpty(createDatastoryRequestDTO.getName()) ||
-                StringUtils.isEmpty(createDatastoryRequestDTO.getType())) {
+                StringUtils.isEmpty(createDatastoryRequestDTO.getType()) ||
+                createDatastoryRequestDTO.getIsDraft() == null) {
             throw new Exception("Invalid request");
         }
 
@@ -305,5 +307,119 @@ public class DatastoryServiceImpl implements IDatastoryService {
         }
 
         return projects.get(0);
+    }
+
+    @Override
+    public FetchDatastoryResponseDTO fetchDatastoriesForProject(String projectId, UserBO userBO) throws Exception {
+        logger.info("Inside fetchDatastoriesForProject");
+
+        Project project = validateFetchDatastoriesRequest(projectId, userBO);
+
+        List<Datastory> datastories = datastoryDAO.getByProjectIds(Arrays.asList(project.getId()));
+
+        if (CollectionUtils.isEmpty(datastories)) {
+            return new FetchDatastoryResponseDTO();
+        }
+
+        List<DatastoryBO> datastoryBOs = convertToDatastoryBOs(datastories);
+
+        FetchDatastoryResponseDTO fetchDatastoryResponseDTO = new FetchDatastoryResponseDTO();
+        fetchDatastoryResponseDTO.setDatastories(datastoryBOs);
+
+        return fetchDatastoryResponseDTO;
+    }
+
+    private List<DatastoryBO> convertToDatastoryBOs(List<Datastory> datastories) {
+        logger.info("Inside convertToDatastoryBOs");
+
+        List<DatastoryBO> datastoryBOs = new ArrayList<>();
+
+        for (Datastory datastory: datastories) {
+            if (datastory == null) {
+                continue;
+            }
+
+            datastoryBOs.add(convertToDatastoryBO(datastory));
+        }
+
+        return datastoryBOs;
+    }
+
+    private Project validateFetchDatastoriesRequest(String projectId, UserBO userBO) throws Exception {
+        logger.info("Inside validateFetchDatastoriesRequest");
+
+        if (StringUtils.isEmpty(projectId)) {
+            throw new Exception("projectId cannot be empty");
+        }
+
+        if (userBO == null) {
+            throw new Exception("Please login again");
+        }
+
+        if (userBO== null || !userBO.getRole().name().equalsIgnoreCase(Role.COLLECTOR.name())) {
+            throw new Exception("This user is not a COLLECTOR");
+        }
+
+        Project project = checkThatProjectExists(new ObjectId(projectId));
+        checkThatUserAndProjectAreLinked(new ObjectId(projectId),
+                new ObjectId(userBO.getId()));
+
+        return project;
+    }
+
+    @Override
+    public PublishDraftDatastoryResponseDTO convertDraftToPublishedDatastory(String datastoryId, UserBO userBO) throws Exception {
+        logger.info("Inside convertDraftToPublishedDatastory");
+
+        Datastory datastory = validateConvertDraftToPublishedDatastoryRequest(datastoryId, userBO);
+
+        datastoryDAO.convertDraftToPublishedDatastory(new ObjectId(datastoryId), null);
+
+        List<Project> projects = projectDAO.fetchByIds(Arrays.asList(datastory.getProjectId()));
+
+        if (CollectionUtils.isEmpty(projects)) {
+            throw new Exception("Datastory not linked to any project");
+        }
+
+        Project project = projects.get(0);
+
+        DatastoryBO datastoryBO = convertToDatastoryBO(datastory);
+
+        populateDatastoryBO(datastoryBO, userBO, convertToProjectBO(project));
+
+        PublishDraftDatastoryResponseDTO publishDraftDatastoryResponseDTO = new PublishDraftDatastoryResponseDTO();
+        publishDraftDatastoryResponseDTO.setPublishedDatastory(datastoryBO);
+
+        return publishDraftDatastoryResponseDTO;
+    }
+
+    private Datastory validateConvertDraftToPublishedDatastoryRequest(String datastoryId, UserBO userBO) throws Exception {
+        logger.info("Inside validateConvertDraftToPublishedDatastoryRequest");
+
+        if (StringUtils.isEmpty(datastoryId)) {
+            throw new Exception("Datastory id cannot be empty");
+        }
+
+        if (userBO == null) {
+            throw new Exception("Please login again");
+        }
+
+        if (userBO.getRole() == null || !userBO.getRole().name().equalsIgnoreCase(Role.COLLECTOR.name())) {
+            throw new Exception("This user is not a COLLECTOR");
+        }
+
+        List<Datastory> datastories = datastoryDAO.getByIds(Arrays.asList(new ObjectId(datastoryId)));
+
+        if (CollectionUtils.isEmpty(datastories)) {
+            throw new Exception("No datastory exists");
+        }
+
+        Datastory datastory = datastories.get(0);
+
+        if (!userBO.getId().equalsIgnoreCase(datastory.getCreatedByUserId().toHexString())) {
+            throw new Exception("This user can't publish this datastory");
+        }
+
+        return datastory;
     }
 }

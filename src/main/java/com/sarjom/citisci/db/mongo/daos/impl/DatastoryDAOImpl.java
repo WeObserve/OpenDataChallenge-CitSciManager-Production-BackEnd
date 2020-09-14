@@ -54,6 +54,32 @@ public class DatastoryDAOImpl implements IDatastoryDAO {
     }
 
     @Override
+    public void convertDraftToPublishedDatastory(ObjectId id, ClientSession clientSession) throws Exception {
+        logger.info("Inside convertDraftToPublishedDatastory");
+
+        if (id == null) {
+            throw new Exception("datastory id is null");
+        }
+
+        MongoCollection<Datastory> datastories = getCollection();
+
+        BasicDBObject query = new BasicDBObject();
+        query.put("_id", id);
+
+        BasicDBObject updatedDocument = new BasicDBObject();
+        updatedDocument.put("is_draft", false);
+
+        BasicDBObject update = new BasicDBObject();
+        update.put("$set", updatedDocument);
+
+        if (clientSession != null) {
+            datastories.updateOne(clientSession, query, update);
+        } else {
+            datastories.updateOne(query, update);
+        }
+    }
+
+    @Override
     public List<Datastory> getByIds(List<ObjectId> ids) throws Exception {
         logger.info("Inside getByIds");
 
@@ -63,6 +89,20 @@ public class DatastoryDAOImpl implements IDatastoryDAO {
 
         BasicDBObject basicDBObject = new BasicDBObject();
         basicDBObject.put("_id", new BasicDBObject("$in", ids));
+
+        return getCollection().find(basicDBObject).into(new ArrayList<>());
+    }
+
+    @Override
+    public List<Datastory> getByProjectIds(List<ObjectId> projectIds) throws Exception {
+        logger.info("Inside getByProjectIds");
+
+        if (CollectionUtils.isEmpty(projectIds)) {
+            return new ArrayList<>();
+        }
+
+        BasicDBObject basicDBObject = new BasicDBObject();
+        basicDBObject.put("project_id", new BasicDBObject("$in", projectIds));
 
         return getCollection().find(basicDBObject).into(new ArrayList<>());
     }
