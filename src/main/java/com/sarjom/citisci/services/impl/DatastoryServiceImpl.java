@@ -74,13 +74,19 @@ public class DatastoryServiceImpl implements IDatastoryService {
             throw new Exception("Invalid request");
         }
 
+        //Doesn't check anything other than whether datastory exists and project exists and returns datastory and project
         ViewDatastoryRequestValidationResponseBO viewDatastoryRequestValidationResponseBO =
                 checkIfDatastoryExistsAndIfProjectAndUserAreLinked(new ObjectId(datastoryId),
-                    new ObjectId(userBO.getId()));
+                   null);
 
         DatastoryBO datastoryBO = convertToDatastoryBO(
                 viewDatastoryRequestValidationResponseBO.getDatastory());
-        populateDatastoryBO(datastoryBO, userBO,
+
+        User createdByUser = userDAO.getUsersByIds(Arrays.asList(viewDatastoryRequestValidationResponseBO.getDatastory().createdByUserId)).get(0);
+
+        UserBO createdByUserBO = convertToUserBO(createdByUser);
+
+        populateDatastoryBO(datastoryBO, createdByUserBO,
                 convertToProjectBO(viewDatastoryRequestValidationResponseBO.getProject()));
 
         ViewDatastoryResponseDTO viewDatastoryResponseDTO = new ViewDatastoryResponseDTO();
@@ -156,7 +162,7 @@ public class DatastoryServiceImpl implements IDatastoryService {
         Datastory datastory = datastories.get(0);
 
         Project project = checkThatProjectExists(datastory.getProjectId());
-        checkThatUserAndProjectAreLinked(datastory.getProjectId(), userId);
+        //checkThatUserAndProjectAreLinked(datastory.getProjectId(), userId);
 
         ViewDatastoryRequestValidationResponseBO viewDatastoryRequestValidationResponseBO = new ViewDatastoryRequestValidationResponseBO();
 

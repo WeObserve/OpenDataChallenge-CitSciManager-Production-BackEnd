@@ -61,6 +61,12 @@ public class AuthenticationFilter implements Filter {
             return;
         }
 
+        if (isThisViewDatastoryRequest(httpServletRequest)) {
+            filterChain.doFilter(request, response);
+            MDC.clear();
+            return;
+        }
+
         String token = httpServletRequest.getHeader("token");
         String tokenId = httpServletRequest.getHeader("tokenId");
 
@@ -115,6 +121,27 @@ public class AuthenticationFilter implements Filter {
 
         filterChain.doFilter(request, response);
         MDC.clear();
+    }
+
+    private boolean isThisViewDatastoryRequest(HttpServletRequest httpServletRequest) {
+        logger.info("Inside isThisViewDatastoryRequest");
+
+        if (httpServletRequest == null) {
+            return false;
+        }
+
+        if (!httpServletRequest.getMethod().equalsIgnoreCase(HttpMethod.GET.name())) {
+            return false;
+        }
+
+        List<String> urlParts = Arrays.asList(httpServletRequest.getRequestURI().split("/"));
+
+        if (CollectionUtils.isEmpty(urlParts) || urlParts.size() != 3 ||
+            !StringUtils.isEmpty(urlParts.get(0)) || !urlParts.get(1).equals("datastories") || StringUtils.isEmpty(urlParts.get(2))) {
+            return false;
+        }
+
+        return true;
     }
 
     private void buildErrorResponse(HttpServletResponse httpServletResponse, String errorMessage) throws IOException {

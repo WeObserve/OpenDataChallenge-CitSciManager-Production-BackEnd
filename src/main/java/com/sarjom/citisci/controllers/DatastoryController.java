@@ -52,9 +52,9 @@ public class DatastoryController {
         ResponseDTO<ViewDatastoryResponseDTO> responseDTO = new ResponseDTO<>();
 
         try {
-            UserBO userBO = (UserBO) httpServletRequest.getAttribute("user");
+            //UserBO userBO = (UserBO) httpServletRequest.getAttribute("user");
 
-            ViewDatastoryResponseDTO viewDatastoryResponseDTO = datastoryService.viewDatastory(datastoryId, userBO);
+            ViewDatastoryResponseDTO viewDatastoryResponseDTO = datastoryService.viewDatastory(datastoryId, null);
 
             responseDTO.setResponse(viewDatastoryResponseDTO);
 
