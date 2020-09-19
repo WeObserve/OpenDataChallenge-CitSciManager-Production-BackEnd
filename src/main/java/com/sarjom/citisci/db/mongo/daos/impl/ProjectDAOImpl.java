@@ -82,4 +82,22 @@ public class ProjectDAOImpl implements IProjectDAO {
 
         return getCollection().find(basicDBObject).into(new ArrayList<>());
     }
+
+    @Override
+    public void deleteProjectsByIds(List<ObjectId> projectIds, ClientSession clientSession) throws Exception {
+        logger.info("Inside deleteProjectsById");
+
+        if (CollectionUtils.isEmpty(projectIds)) {
+            return;
+        }
+
+        BasicDBObject basicDBObject = new BasicDBObject();
+        basicDBObject.put("_id", new BasicDBObject("$in", projectIds));
+
+        if (clientSession == null) {
+            getCollection().deleteMany(basicDBObject);
+        } else {
+            getCollection().deleteMany(clientSession, basicDBObject);
+        }
+    }
 }

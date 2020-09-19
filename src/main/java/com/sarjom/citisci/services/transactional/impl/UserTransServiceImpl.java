@@ -119,11 +119,20 @@ public class UserTransServiceImpl implements IUserTransService {
         return createUserResponseDTO;
     }
 
-    private void sendInvitationEmail(String plainTextPassword, String recipientEmail, UserBO userBO) throws Exception {
+    private void sendInvitationEmail(String plainTextPassword, String recipientEmail, UserBO userBO, String projectName, Boolean isFirstInvitation) throws Exception {
         logger.info("Inside sendInvitationEmail");
 
-        String message = "You have been invited to " + invitationEmailLinkEndpoint + " by " +
-                userBO.getName() + ". Use " + plainTextPassword + " as your password to login";
+        String message = "";
+
+        if (isFirstInvitation != null && isFirstInvitation) {
+            message = "You have been invited to " + invitationEmailLinkEndpoint + " by " +
+                    userBO.getName() + " to contribute to project: " + projectName +
+                    ". Use " + plainTextPassword + " as your password to login";
+        } else {
+            message = "You have been invited to " + invitationEmailLinkEndpoint + " by " +
+                    userBO.getName() + " to contribute to project: " + projectName +
+                    ".";
+        }
         String subject = "Invitation from Greendubs";
 
         awsSesService.sendEmail(invitationSenderEmail, recipientEmail, subject, message);
@@ -189,7 +198,12 @@ public class UserTransServiceImpl implements IUserTransService {
 
         if (inviteUserRequestBO.getIsUserCreationRequired() != null &&
                 inviteUserRequestBO.getIsUserCreationRequired()) {
-            sendInvitationEmail(userBO.getPlainTextPassword(), userBO.getEmail(), inviteUserRequestBO.getUserBO());
+            sendInvitationEmail(userBO.getPlainTextPassword(), userBO.getEmail(), inviteUserRequestBO.getUserBO(),
+                    inviteUserRequestBO.getProjectName(), true);
+        } else if (inviteUserRequestBO.getIsUserProjectMappingCreationRequired() != null &&
+                inviteUserRequestBO.getIsUserProjectMappingCreationRequired()){
+            sendInvitationEmail(null, inviteUserRequestBO.getEmail(), inviteUserRequestBO.getUserBO(),
+                    inviteUserRequestBO.getProjectName(), false);
         }
     }
 

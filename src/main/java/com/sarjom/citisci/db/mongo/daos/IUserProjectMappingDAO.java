@@ -10,4 +10,5 @@ public interface IUserProjectMappingDAO {
     void createUserProjectMapping(UserProjectMapping userProjectMapping, ClientSession clientSession) throws Exception;
     List<UserProjectMapping> fetchByUserId(ObjectId userId) throws Exception;
     List<UserProjectMapping> fetchByProjectIdAndUserIds(ObjectId projectId, List<ObjectId> userIds) throws Exception;
+    void deleteByProjectIds(List<ObjectId> projectIds, ClientSession clientSession) throws Exception;
 }

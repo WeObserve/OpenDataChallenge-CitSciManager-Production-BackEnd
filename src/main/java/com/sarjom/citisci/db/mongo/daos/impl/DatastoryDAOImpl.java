@@ -106,4 +106,22 @@ public class DatastoryDAOImpl implements IDatastoryDAO {
 
         return getCollection().find(basicDBObject).into(new ArrayList<>());
     }
+
+    @Override
+    public void deleteDatastoriesForProject(List<ObjectId> projectIds, ClientSession clientSession) throws Exception {
+        logger.info("Inside deleteDatastoriesForProject");
+
+        if (CollectionUtils.isEmpty(projectIds)) {
+            return;
+        }
+
+        BasicDBObject basicDBObject = new BasicDBObject();
+        basicDBObject.put("project_id", new BasicDBObject("$in", projectIds));
+
+        if (clientSession == null) {
+            getCollection().deleteMany(basicDBObject);
+        } else {
+            getCollection().deleteMany(clientSession, basicDBObject);
+        }
+    }
 }

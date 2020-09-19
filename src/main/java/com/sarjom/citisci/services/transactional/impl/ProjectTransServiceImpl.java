@@ -6,11 +6,10 @@ import com.mongodb.WriteConcern;
 import com.mongodb.client.ClientSession;
 import com.sarjom.citisci.bos.ProjectBO;
 import com.sarjom.citisci.bos.UserBO;
-import com.sarjom.citisci.db.mongo.daos.IProjectDAO;
-import com.sarjom.citisci.db.mongo.daos.IUserDAO;
-import com.sarjom.citisci.db.mongo.daos.IUserProjectMappingDAO;
+import com.sarjom.citisci.db.mongo.daos.*;
 import com.sarjom.citisci.dtos.CreateProjectResponseDTO;
 import com.sarjom.citisci.dtos.CreateUserResponseDTO;
+import com.sarjom.citisci.dtos.DeleteProjectResponseDTO;
 import com.sarjom.citisci.entities.Project;
 import com.sarjom.citisci.entities.User;
 import com.sarjom.citisci.entities.UserProjectMapping;
@@ -24,6 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class ProjectTransServiceImpl implements IProjectTransService {
@@ -50,6 +51,12 @@ public class ProjectTransServiceImpl implements IProjectTransService {
 
     @Autowired
     IUserProjectMappingDAO userProjectMappingDAO;
+
+    @Autowired
+    IDatastoryDAO datastoryDAO;
+
+    @Autowired
+    IFileDAO fileDAO;
 
     @Override
     public CreateProjectResponseDTO createProject(ProjectBO projectBO, Boolean useTxn) throws Exception {
@@ -107,5 +114,51 @@ public class ProjectTransServiceImpl implements IProjectTransService {
         createProjectResponseDTO.setCreatedProject(projectBO);
 
         return createProjectResponseDTO;
+    }
+
+    @Override
+    public DeleteProjectResponseDTO deleteProject(List<ObjectId> projectIds, Boolean useTxn) throws Exception {
+        logger.info("Inside deleteProject");
+
+        if (useTxn == null || !useTxn) {
+            return deleteProjectWithoutTxn(projectIds, null);
+        }
+
+        return deleteProjectWithTxn(projectIds);
+    }
+
+    private DeleteProjectResponseDTO deleteProjectWithTxn(List<ObjectId> projectIds) throws Exception {
+        logger.info("Inside deleteProjectWithTxn");
+
+        ClientSession clientSession = mongoClient.startSession();
+
+        try {
+            clientSession.startTransaction(TransactionOptions.builder().writeConcern(WriteConcern.MAJORITY).build());
+
+            DeleteProjectResponseDTO deleteProjectResponseDTO = deleteProjectWithoutTxn(projectIds, clientSession);
+
+            clientSession.commitTransaction();
+            clientSession.close();
+
+            return deleteProjectResponseDTO;
+        } catch (Exception e) {
+            clientSession.abortTransaction();
+            clientSession.close();
+            throw e;
+        }
+    }
+
+    private DeleteProjectResponseDTO deleteProjectWithoutTxn(List<ObjectId> projectIds, ClientSession clientSession) throws Exception {
+        logger.info("Inside deleteProjectWithoutTxn");
+
+        projectDAO.deleteProjectsByIds(projectIds, clientSession);
+        userProjectMappingDAO.deleteByProjectIds(projectIds, clientSession);
+        fileDAO.deleteFilesForProject(projectIds, clientSession);
+        datastoryDAO.deleteDatastoriesForProject(projectIds, clientSession);
+
+        DeleteProjectResponseDTO deleteProjectResponseDTO = new DeleteProjectResponseDTO();
+        deleteProjectResponseDTO.setStatus("SUCCESS");
+
+        return deleteProjectResponseDTO;
     }
 }

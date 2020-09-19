@@ -12,6 +12,7 @@ public class InviteUserRequestBO {
     public String name;
     public String organisationId;
     public String projectId;
+    public String projectName;
     public UserBO userBO;
     public String userId;
     public Boolean isUserCreationRequired;

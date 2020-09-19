@@ -13,4 +13,6 @@ public interface IProjectDAO {
     List<Project> getProjectsByName(String name) throws Exception;
 
     List<Project> fetchByIds(List<ObjectId> ids) throws Exception;
+
+    void deleteProjectsByIds(List<ObjectId> ids, ClientSession clientSession) throws Exception;
 }

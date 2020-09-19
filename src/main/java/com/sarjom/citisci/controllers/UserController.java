@@ -32,7 +32,7 @@ public class UserController {
 
             InviteUserResponseDTO inviteUserResponseDTO = userService.inviteUser(inviteUserRequestDTO, userBO);
 
-            userService.processInviteUsers(inviteUserRequestDTO, userBO);
+            userService.processInviteUsers(inviteUserRequestDTO, userBO, inviteUserResponseDTO.getProjectBO());
             
             responseDTO.setResponse(inviteUserResponseDTO);
 

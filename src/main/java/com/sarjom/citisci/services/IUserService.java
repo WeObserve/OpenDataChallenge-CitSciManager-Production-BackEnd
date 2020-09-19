@@ -1,5 +1,6 @@
 package com.sarjom.citisci.services;
 
+import com.sarjom.citisci.bos.ProjectBO;
 import com.sarjom.citisci.bos.UserBO;
 import com.sarjom.citisci.dtos.CreateUserRequestDTO;
 import com.sarjom.citisci.dtos.CreateUserResponseDTO;
@@ -11,5 +12,5 @@ public interface IUserService {
 
     InviteUserResponseDTO inviteUser(InviteUserRequestDTO inviteUserRequestDTO, UserBO userBO) throws Exception;
 
-    void processInviteUsers(InviteUserRequestDTO inviteUserRequestDTO, UserBO userBO) throws Exception;
+    void processInviteUsers(InviteUserRequestDTO inviteUserRequestDTO, UserBO userBO, ProjectBO projectBO) throws Exception;
 }

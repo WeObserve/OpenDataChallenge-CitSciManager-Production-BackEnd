@@ -7,9 +7,7 @@ import com.sarjom.citisci.db.mongo.daos.IOrganisationDAO;
 import com.sarjom.citisci.db.mongo.daos.IProjectDAO;
 import com.sarjom.citisci.db.mongo.daos.IUserOrganisationMappingDAO;
 import com.sarjom.citisci.db.mongo.daos.IUserProjectMappingDAO;
-import com.sarjom.citisci.dtos.CreateProjectRequestDTO;
-import com.sarjom.citisci.dtos.CreateProjectResponseDTO;
-import com.sarjom.citisci.dtos.FetchAllProjectsForUserResponseDTO;
+import com.sarjom.citisci.dtos.*;
 import com.sarjom.citisci.entities.Organisation;
 import com.sarjom.citisci.entities.Project;
 import com.sarjom.citisci.entities.UserOrganisationMapping;
@@ -223,5 +221,35 @@ public class ProjectServiceImpl implements IProjectService {
         organisationBO.setName(organisation.getName());
 
         return organisationBO;
+    }
+
+    @Override
+    public DeleteProjectResponseDTO deleteProject(DeleteProjectRequestDTO deleteProjectRequestDTO) throws Exception {
+        logger.info("Inside deleteProject");
+
+        List<ObjectId> projectIds = validateDeleteProjectRequestDTO(deleteProjectRequestDTO);
+
+        return projectTransService.deleteProject(projectIds, true);
+    }
+
+    private List<ObjectId> validateDeleteProjectRequestDTO(DeleteProjectRequestDTO deleteProjectRequestDTO) throws Exception {
+        logger.info("Inside validateDeleteProjectRequestDTO");
+
+        if (deleteProjectRequestDTO == null ||
+                CollectionUtils.isEmpty(deleteProjectRequestDTO.getProjectIds())) {
+            throw new Exception("Invalid request");
+        }
+
+        List<ObjectId> projectIds = new ArrayList<>();
+
+        for (String projectIdString: deleteProjectRequestDTO.getProjectIds()) {
+            if (StringUtils.isEmpty(projectIdString)) {
+                continue;
+            }
+
+            projectIds.add(new ObjectId(projectIdString));
+        }
+
+        return projectIds;
     }
 }

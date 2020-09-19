@@ -12,4 +12,5 @@ public interface IDatastoryDAO {
     List<Datastory> getByIds(List<ObjectId> ids) throws Exception;
     List<Datastory> getByProjectIds(List<ObjectId> projectIds) throws Exception;
     void convertDraftToPublishedDatastory(ObjectId id, ClientSession clientSession) throws Exception;
+    void deleteDatastoriesForProject(List<ObjectId> projectIds, ClientSession clientSession) throws Exception;
 }

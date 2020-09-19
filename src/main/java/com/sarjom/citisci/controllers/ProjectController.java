@@ -43,6 +43,30 @@ public class ProjectController {
         }
     }
 
+    @DeleteMapping("")
+    public ResponseDTO<DeleteProjectResponseDTO> deleteProject(HttpServletRequest httpServletRequest,
+                                                               @RequestBody DeleteProjectRequestDTO deleteProjectRequestDTO,
+                                                               HttpServletResponse httpServletResponse) {
+        logger.info("Inside deleteProject");
+
+        ResponseDTO<DeleteProjectResponseDTO> responseDTO = new ResponseDTO<>();
+
+        try {
+            UserBO userBO = (UserBO) httpServletRequest.getAttribute("user");
+
+            DeleteProjectResponseDTO deleteProjectResponseDTO = projectService.deleteProject(deleteProjectRequestDTO);
+
+            responseDTO.setResponse(deleteProjectResponseDTO);
+
+            responseDTO.setStatus("SUCCESS");
+            return responseDTO;
+        } catch (Exception e) {
+            responseDTO.setReason(e.getMessage());
+            responseDTO.setStatus("FAILED");
+            return responseDTO;
+        }
+    }
+
     @GetMapping("")
     public ResponseDTO<FetchAllProjectsForUserResponseDTO> fetchAllProjectsForUser(HttpServletRequest httpServletRequest,
                                                                                    HttpServletResponse httpServletResponse) {

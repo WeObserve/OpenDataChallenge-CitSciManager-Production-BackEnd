@@ -82,4 +82,22 @@ public class UserProjectMappingDAOImpl implements IUserProjectMappingDAO {
 
         return getCollection().find(basicDBObject).into(new ArrayList<>());
     }
+
+    @Override
+    public void deleteByProjectIds(List<ObjectId> projectIds, ClientSession clientSession) throws Exception {
+        logger.info("Inside deleteByProjectIds");
+
+        if (CollectionUtils.isEmpty(projectIds)) {
+            return;
+        }
+
+        BasicDBObject basicDBObject = new BasicDBObject();
+        basicDBObject.put("project_id", new BasicDBObject("$in", projectIds));
+
+        if (clientSession == null) {
+            getCollection().deleteMany(basicDBObject);
+        } else {
+            getCollection().deleteMany(clientSession, basicDBObject);
+        }
+    }
 }

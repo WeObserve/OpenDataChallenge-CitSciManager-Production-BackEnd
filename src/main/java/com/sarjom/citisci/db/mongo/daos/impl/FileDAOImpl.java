@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,5 +66,23 @@ public class FileDAOImpl implements IFileDAO {
         basicDBObject.put("project_id", projectId);
 
         return getCollection().find(basicDBObject).into(new ArrayList<>());
+    }
+
+    @Override
+    public void deleteFilesForProject(List<ObjectId> projectIds, ClientSession clientSession) throws Exception {
+        logger.info("Inside deleteFilesForProject");
+
+        if (CollectionUtils.isEmpty(projectIds)) {
+            return;
+        }
+
+        BasicDBObject basicDBObject = new BasicDBObject();
+        basicDBObject.put("project_id", new BasicDBObject("$in", projectIds));
+
+        if (clientSession == null) {
+            getCollection().deleteMany(basicDBObject);
+        } else {
+            getCollection().deleteMany(clientSession, basicDBObject);
+        }
     }
 }

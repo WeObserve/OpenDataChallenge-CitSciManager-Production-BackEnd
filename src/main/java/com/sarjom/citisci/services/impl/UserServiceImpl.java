@@ -1,6 +1,7 @@
 package com.sarjom.citisci.services.impl;
 
 import com.sarjom.citisci.bos.InviteUserRequestBO;
+import com.sarjom.citisci.bos.ProjectBO;
 import com.sarjom.citisci.bos.UserBO;
 import com.sarjom.citisci.db.mongo.daos.*;
 import com.sarjom.citisci.dtos.CreateUserRequestDTO;
@@ -8,6 +9,7 @@ import com.sarjom.citisci.dtos.CreateUserResponseDTO;
 import com.sarjom.citisci.dtos.InviteUserRequestDTO;
 import com.sarjom.citisci.dtos.InviteUserResponseDTO;
 import com.sarjom.citisci.entities.*;
+import com.sarjom.citisci.enums.ProjectType;
 import com.sarjom.citisci.services.IUserService;
 import com.sarjom.citisci.services.transactional.IUserTransService;
 import com.sarjom.citisci.services.utilities.IAwsS3Service;
@@ -112,18 +114,35 @@ public class UserServiceImpl implements IUserService {
     public InviteUserResponseDTO inviteUser(InviteUserRequestDTO inviteUserRequestDTO, UserBO userBO) throws Exception {
         logger.info("Inside inviteUser");
 
-        validateInviteUserRequestDTO(inviteUserRequestDTO);
+        Project project = validateInviteUserRequestDTO(inviteUserRequestDTO);
+
+        ProjectBO projectBO = convertToProjectBO(project);
 
         InviteUserResponseDTO inviteUserResponseDTO = new InviteUserResponseDTO();
         inviteUserResponseDTO.setStatus("Successfully invited");
+        inviteUserResponseDTO.setProjectBO(projectBO);
 
         return inviteUserResponseDTO;
     }
 
+    private ProjectBO convertToProjectBO(Project project) {
+        logger.info("Inside convertToProjectBO");
+
+        ProjectBO projectBO = new ProjectBO();
+
+        BeanUtils.copyProperties(project, projectBO);
+
+        projectBO.setId(project.getId().toHexString());
+        projectBO.setOrganisationId(project.getOrganisationId().toHexString());
+        projectBO.setCreatedByUserId(project.getCreatedByUserId().toHexString());
+        projectBO.setProjectType(ProjectType.valueOf(project.getProjectType()));
+
+        return projectBO;
+    }
 
     @Override
     @Async
-    public void processInviteUsers(InviteUserRequestDTO inviteUserRequestDTO, UserBO userBO) throws Exception {
+    public void processInviteUsers(InviteUserRequestDTO inviteUserRequestDTO, UserBO userBO, ProjectBO projectBO) throws Exception {
         logger.info("Inside processInviteUsers");
 
         String bucketName = inviteUserRequestDTO.getBucketName();
@@ -134,7 +153,7 @@ public class UserServiceImpl implements IUserService {
         List<Map<String, String>> userEmailAndNameMapList = csvService.convertCsvToListOfMap(file);
 
         Map<String, InviteUserRequestBO> emailToInviteUserRequestBOMap = populateEmailToInviteUserRequestBOMap(
-                userEmailAndNameMapList, inviteUserRequestDTO, userBO);
+                userEmailAndNameMapList, inviteUserRequestDTO, userBO, projectBO);
 
         for (Map.Entry<String, InviteUserRequestBO> entry: emailToInviteUserRequestBOMap.entrySet()) {
             try {
@@ -149,7 +168,7 @@ public class UserServiceImpl implements IUserService {
 
     private Map<String, InviteUserRequestBO> populateEmailToInviteUserRequestBOMap(
             List<Map<String, String>> userEmailAndNameMapList, InviteUserRequestDTO inviteUserRequestDTO,
-            UserBO userBO) throws Exception {
+            UserBO userBO, ProjectBO projectBO) throws Exception {
         logger.info("Inside populateEmailToInviteUserRequestBOMap");
 
         if (CollectionUtils.isEmpty(userEmailAndNameMapList)) {
@@ -215,6 +234,7 @@ public class UserServiceImpl implements IUserService {
             inviteUserRequestBO.setOrganisationId(inviteUserRequestDTO.getOrganisationId());
             inviteUserRequestBO.setProjectId(inviteUserRequestDTO.getProjectId());
             inviteUserRequestBO.setUserBO(userBO);
+            inviteUserRequestBO.setProjectName(projectBO.getName());
 
             if (CollectionUtils.isEmpty(emailToUserMap) ||
                 !emailToUserMap.containsKey(entry.getKey())) {
@@ -250,7 +270,7 @@ public class UserServiceImpl implements IUserService {
         return emailToInviteUserRequestBOMap;
     }
 
-    private void validateInviteUserRequestDTO(InviteUserRequestDTO inviteUserRequestDTO) throws Exception {
+    private Project validateInviteUserRequestDTO(InviteUserRequestDTO inviteUserRequestDTO) throws Exception {
         logger.info("Inside validateInviteUserRequestDTO");
 
         if (inviteUserRequestDTO == null ||
@@ -262,11 +282,13 @@ public class UserServiceImpl implements IUserService {
         }
 
         checkIfOrganisationExists(new ObjectId(inviteUserRequestDTO.getOrganisationId()));
-        checkIfProjectExistsAndIsLinkedToThisOrg(new ObjectId(inviteUserRequestDTO.getOrganisationId()),
+        Project project = checkIfProjectExistsAndIsLinkedToThisOrg(new ObjectId(inviteUserRequestDTO.getOrganisationId()),
                 new ObjectId(inviteUserRequestDTO.getProjectId()));
+
+        return project;
     }
 
-    private void checkIfProjectExistsAndIsLinkedToThisOrg(ObjectId orgId, ObjectId projectId) throws Exception {
+    private Project checkIfProjectExistsAndIsLinkedToThisOrg(ObjectId orgId, ObjectId projectId) throws Exception {
         logger.info("Inside checkIfProjectExistsAndIsLinkedToThisOrg");
 
         List<Project> projects = projectDAO.fetchByIds(Arrays.asList(projectId));
@@ -280,6 +302,8 @@ public class UserServiceImpl implements IUserService {
         if (!project.getOrganisationId().toHexString().equalsIgnoreCase(orgId.toHexString())) {
             throw new Exception("This project is not linked to this organisation");
         }
+
+        return project;
     }
 
     private void checkIfOrganisationExists(ObjectId orgId) throws Exception {
