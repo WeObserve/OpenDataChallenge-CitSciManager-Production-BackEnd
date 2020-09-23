@@ -8,6 +8,6 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class PublishDraftDatastoryResponseDTO {
-    public DatastoryBO publishedDatastory;
+public class UpdateDraftDatastoryResponseDTO {
+    public DatastoryBO updatedDatastory;
 }

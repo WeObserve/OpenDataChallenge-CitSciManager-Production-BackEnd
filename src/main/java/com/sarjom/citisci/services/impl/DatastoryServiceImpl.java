@@ -374,12 +374,12 @@ public class DatastoryServiceImpl implements IDatastoryService {
     }
 
     @Override
-    public PublishDraftDatastoryResponseDTO convertDraftToPublishedDatastory(String datastoryId, UserBO userBO) throws Exception {
-        logger.info("Inside convertDraftToPublishedDatastory");
+    public UpdateDraftDatastoryResponseDTO updateDraftDatastory(String datastoryId, UpdateDraftDatastoryRequestDTO updateDraftDatastoryRequestDTO, UserBO userBO) throws Exception {
+        logger.info("Inside updateDraftDatastory");
 
-        Datastory datastory = validateConvertDraftToPublishedDatastoryRequest(datastoryId, userBO);
+        Datastory datastory = validateUpdateDraftDatastoryRequest(datastoryId, updateDraftDatastoryRequestDTO, userBO);
 
-        datastoryDAO.convertDraftToPublishedDatastory(new ObjectId(datastoryId), null);
+        datastoryDAO.updateDraftDatastory(new ObjectId(datastoryId), datastory, null);
 
         List<Project> projects = projectDAO.fetchByIds(Arrays.asList(datastory.getProjectId()));
 
@@ -393,13 +393,13 @@ public class DatastoryServiceImpl implements IDatastoryService {
 
         populateDatastoryBO(datastoryBO, userBO, convertToProjectBO(project));
 
-        PublishDraftDatastoryResponseDTO publishDraftDatastoryResponseDTO = new PublishDraftDatastoryResponseDTO();
-        publishDraftDatastoryResponseDTO.setPublishedDatastory(datastoryBO);
+        UpdateDraftDatastoryResponseDTO updateDraftDatastoryResponseDTO = new UpdateDraftDatastoryResponseDTO();
+        updateDraftDatastoryResponseDTO.setUpdatedDatastory(datastoryBO);
 
-        return publishDraftDatastoryResponseDTO;
+        return updateDraftDatastoryResponseDTO;
     }
 
-    private Datastory validateConvertDraftToPublishedDatastoryRequest(String datastoryId, UserBO userBO) throws Exception {
+    private Datastory validateUpdateDraftDatastoryRequest(String datastoryId, UpdateDraftDatastoryRequestDTO updateDraftDatastoryRequestDTO, UserBO userBO) throws Exception {
         logger.info("Inside validateConvertDraftToPublishedDatastoryRequest");
 
         if (StringUtils.isEmpty(datastoryId)) {
@@ -414,6 +414,14 @@ public class DatastoryServiceImpl implements IDatastoryService {
             throw new Exception("This user is not a COLLECTOR");
         }
 
+        if (updateDraftDatastoryRequestDTO == null ||
+                (updateDraftDatastoryRequestDTO.getIsDraft() == null &&
+                        StringUtils.isEmpty(updateDraftDatastoryRequestDTO.getName()) &&
+                        StringUtils.isEmpty(updateDraftDatastoryRequestDTO.getContent()) &&
+                        StringUtils.isEmpty(updateDraftDatastoryRequestDTO.getType()))) {
+            throw new Exception("Invalid request");
+        }
+
         List<Datastory> datastories = datastoryDAO.getByIds(Arrays.asList(new ObjectId(datastoryId)));
 
         if (CollectionUtils.isEmpty(datastories)) {
@@ -423,7 +431,23 @@ public class DatastoryServiceImpl implements IDatastoryService {
         Datastory datastory = datastories.get(0);
 
         if (!userBO.getId().equalsIgnoreCase(datastory.getCreatedByUserId().toHexString())) {
-            throw new Exception("This user can't publish this datastory");
+            throw new Exception("This user can't update this datastory");
+        }
+
+        if (updateDraftDatastoryRequestDTO.getIsDraft() != null) {
+            datastory.setIsDraft(updateDraftDatastoryRequestDTO.getIsDraft());
+        }
+
+        if (!StringUtils.isEmpty(updateDraftDatastoryRequestDTO.getName())) {
+            datastory.setName(updateDraftDatastoryRequestDTO.getName());
+        }
+
+        if (!StringUtils.isEmpty(updateDraftDatastoryRequestDTO.getContent())) {
+            datastory.setContent(updateDraftDatastoryRequestDTO.getContent());
+        }
+
+        if (!StringUtils.isEmpty(updateDraftDatastoryRequestDTO.getType())) {
+            datastory.setType(updateDraftDatastoryRequestDTO.getType());
         }
 
         return datastory;

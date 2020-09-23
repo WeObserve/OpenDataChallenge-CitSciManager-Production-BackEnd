@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,11 +55,16 @@ public class DatastoryDAOImpl implements IDatastoryDAO {
     }
 
     @Override
-    public void convertDraftToPublishedDatastory(ObjectId id, ClientSession clientSession) throws Exception {
-        logger.info("Inside convertDraftToPublishedDatastory");
+    public void updateDraftDatastory(ObjectId id, Datastory datastory, ClientSession clientSession) throws Exception {
+        logger.info("Inside updateDraftDatastory");
 
         if (id == null) {
             throw new Exception("datastory id is null");
+        }
+
+        if (datastory == null) {
+            logger.info("No updates needd");
+            return;
         }
 
         MongoCollection<Datastory> datastories = getCollection();
@@ -67,7 +73,22 @@ public class DatastoryDAOImpl implements IDatastoryDAO {
         query.put("_id", id);
 
         BasicDBObject updatedDocument = new BasicDBObject();
-        updatedDocument.put("is_draft", false);
+
+        if (datastory.getIsDraft() != null) {
+            updatedDocument.put("is_draft", false);
+        }
+
+        if (!StringUtils.isEmpty(datastory.getName())) {
+            updatedDocument.put("name", datastory.getName());
+        }
+
+        if (!StringUtils.isEmpty(datastory.getContent())) {
+            updatedDocument.put("content", datastory.getContent());
+        }
+
+        if (!StringUtils.isEmpty(datastory.getType())) {
+            updatedDocument.put("type", datastory.getType());
+        }
 
         BasicDBObject update = new BasicDBObject();
         update.put("$set", updatedDocument);

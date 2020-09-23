@@ -13,5 +13,5 @@ public interface IDatastoryService {
 
     FetchDatastoryResponseDTO fetchDatastoriesForProject(String projectId, UserBO userBO) throws Exception;
 
-    PublishDraftDatastoryResponseDTO convertDraftToPublishedDatastory(String datastoryId, UserBO userBO) throws Exception;
+    UpdateDraftDatastoryResponseDTO updateDraftDatastory(String datastoryId, UpdateDraftDatastoryRequestDTO updateDraftDatastoryRequestDTO, UserBO userBO) throws Exception;
 }

@@ -90,23 +90,24 @@ public class DatastoryController {
         }
     }
 
-    @PutMapping(value = "/publish-draft/{datastoryId}")
-    public ResponseDTO<PublishDraftDatastoryResponseDTO> publishDraftDatastory(HttpServletRequest httpServletRequest,
-                                                               @PathVariable("datastoryId") String datastoryId) {
-        logger.info("Inside publishDraftDatastory");
+    @PutMapping(value = "/update-draft/{datastoryId}")
+    public ResponseDTO<UpdateDraftDatastoryResponseDTO> updateDraftDatastory(HttpServletRequest httpServletRequest,
+                                                                              @PathVariable("datastoryId") String datastoryId,
+                                                                             @RequestBody UpdateDraftDatastoryRequestDTO updateDraftDatastoryRequestDTO) {
+        logger.info("Inside updateDraftDatastory");
 
-        ResponseDTO<PublishDraftDatastoryResponseDTO> responseDTO = new ResponseDTO<>();
+        ResponseDTO<UpdateDraftDatastoryResponseDTO> responseDTO = new ResponseDTO<>();
 
         try {
             UserBO userBO = (UserBO) httpServletRequest.getAttribute("user");
 
-            PublishDraftDatastoryResponseDTO publishDraftDatastoryResponseDTO = datastoryService.convertDraftToPublishedDatastory(datastoryId, userBO);
+            UpdateDraftDatastoryResponseDTO updateDraftDatastoryResponseDTO = datastoryService.updateDraftDatastory(datastoryId, updateDraftDatastoryRequestDTO, userBO);
 
-            if (!publishDraftDatastoryResponseDTO.getPublishedDatastory().getIsDraft()) {
-                datastoryService.sendDatastoryPublishedEmails(publishDraftDatastoryResponseDTO.getPublishedDatastory());
+            if (!updateDraftDatastoryResponseDTO.getUpdatedDatastory().getIsDraft()) {
+                datastoryService.sendDatastoryPublishedEmails(updateDraftDatastoryResponseDTO.getUpdatedDatastory());
             }
 
-            responseDTO.setResponse(publishDraftDatastoryResponseDTO);
+            responseDTO.setResponse(updateDraftDatastoryResponseDTO);
 
             responseDTO.setStatus("SUCCESS");
             return responseDTO;
