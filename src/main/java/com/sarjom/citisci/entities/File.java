@@ -39,5 +39,10 @@ public class File {
 
     public String license;
     public String comments;
+
+    @BsonProperty(value = "file_type")
     public String fileType;
+
+    public String status;
+    public List<String> headers;
 }

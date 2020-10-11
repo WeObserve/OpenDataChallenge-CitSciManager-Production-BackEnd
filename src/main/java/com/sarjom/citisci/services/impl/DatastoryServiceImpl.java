@@ -4,6 +4,7 @@ import com.sarjom.citisci.bos.*;
 import com.sarjom.citisci.db.mongo.daos.*;
 import com.sarjom.citisci.dtos.*;
 import com.sarjom.citisci.entities.*;
+import com.sarjom.citisci.enums.FileStatus;
 import com.sarjom.citisci.enums.FileType;
 import com.sarjom.citisci.enums.ProjectType;
 import com.sarjom.citisci.enums.Role;
@@ -225,6 +226,10 @@ public class DatastoryServiceImpl implements IDatastoryService {
         fileBO.setFileType(FileType.valueOf(file.getFileType()));
         fileBO.setUploadedByUserId(file.getUploadedByUserId().toHexString());
         fileBO.setUploadedByUser(userIdToUserBOMap.get(fileBO.getUploadedByUserId()));
+
+        if (!StringUtils.isEmpty(file.getStatus())) {
+            fileBO.setStatus(FileStatus.valueOf(file.getStatus()));
+        }
 
         return fileBO;
     }

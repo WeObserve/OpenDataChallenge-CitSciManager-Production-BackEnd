@@ -1,5 +1,6 @@
 package com.sarjom.citisci.bos;
 
+import com.sarjom.citisci.enums.FileStatus;
 import com.sarjom.citisci.enums.FileType;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,4 +27,6 @@ public class FileBO {
     public List<String> customTags;
     public FileType fileType;
     public UserBO uploadedByUser;
+    public FileStatus status;
+    public List<String> headers;
 }

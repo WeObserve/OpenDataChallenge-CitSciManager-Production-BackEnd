@@ -69,6 +69,21 @@ public class FileDAOImpl implements IFileDAO {
     }
 
     @Override
+    public List<File> fetchByProjectIdAndId(ObjectId projectId, List<ObjectId> ids) throws Exception {
+        logger.info("Inside fetchByProjectIdAndId");
+
+        if (projectId == null || CollectionUtils.isEmpty(ids)) {
+            return new ArrayList<>();
+        }
+
+        BasicDBObject basicDBObject = new BasicDBObject();
+        basicDBObject.put("project_id", projectId);
+        basicDBObject.put("_id", new BasicDBObject("$in", ids));
+
+        return getCollection().find(basicDBObject).into(new ArrayList<>());
+    }
+
+    @Override
     public void deleteFilesForProject(List<ObjectId> projectIds, ClientSession clientSession) throws Exception {
         logger.info("Inside deleteFilesForProject");
 

@@ -8,7 +8,6 @@ import com.sarjom.citisci.db.mongo.daos.IUserDAO;
 import com.sarjom.citisci.db.mongo.daos.IUserProjectMappingDAO;
 import com.sarjom.citisci.dtos.*;
 import com.sarjom.citisci.entities.*;
-import com.sarjom.citisci.enums.FileStatus;
 import com.sarjom.citisci.enums.FileType;
 import com.sarjom.citisci.enums.Role;
 import com.sarjom.citisci.services.IFileService;
@@ -160,11 +159,6 @@ public class FileServiceImpl implements IFileService {
         fileBO.setId(file.getId().toHexString());
         fileBO.setProjectId(file.getProjectId().toHexString());
         fileBO.setFileType(FileType.valueOf(file.getFileType()));
-
-        if (!StringUtils.isEmpty(file.getStatus())) {
-            fileBO.setStatus(FileStatus.valueOf(file.getStatus()));
-        }
-
         fileBO.setUploadedByUserId(file.getUploadedByUserId().toHexString());
         fileBO.setUploadedByUser(userIdToUserBOMap.get(fileBO.getUploadedByUserId()));
 
@@ -183,7 +177,7 @@ public class FileServiceImpl implements IFileService {
         file.setUploadedByUserId(new ObjectId(userBO.getId()));
 
         if (createFileRequestDTO.getFileType().equalsIgnoreCase(FileType.META_DATA.name())) {
-            file.setStatus(FileStatus.UPLOADED.name());
+            file.setStatus("");
         }
 
         return file;

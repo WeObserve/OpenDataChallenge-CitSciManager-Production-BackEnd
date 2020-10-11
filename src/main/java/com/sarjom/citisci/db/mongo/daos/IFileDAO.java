@@ -10,5 +10,6 @@ import java.util.List;
 public interface IFileDAO {
     void createFile(File file, ClientSession clientSession) throws Exception;
     List<File> fetchByProjectId(ObjectId projectId) throws Exception;
+    List<File> fetchByProjectIdAndId(ObjectId projectId, List<ObjectId> fileIds) throws Exception;
     void deleteFilesForProject(List<ObjectId> projectIds, ClientSession clientSession) throws Exception;
 }
