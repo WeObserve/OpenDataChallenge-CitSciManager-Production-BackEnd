@@ -29,10 +29,10 @@ public class Join {
     @BsonProperty(value = "file_id_2")
     public ObjectId fileId2;
 
-    @BsonProperty(value = "columns_for _file_1")
+    @BsonProperty(value = "columns_for_file_1")
     public List<String> columnsForFile1;
 
-    @BsonProperty(value = "columns_for _file_2")
+    @BsonProperty(value = "columns_for_file_2")
     public List<String> columnsForFile2;
 
     @BsonProperty(value = "join_column_for_file_1")
