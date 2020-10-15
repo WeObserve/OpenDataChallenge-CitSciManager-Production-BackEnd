@@ -21,4 +21,4 @@ Development is spread across individual branches/contributors. We merge changes 
 ## Areas of work
 We are a research based lab, our goal is to first find out "gaps" in current systems and then use the most appropriate people and technologies to empower communities through open source development. If you want to contribute, please drop in an email at greendubs2020@gmail.com or check us out on our site.
 
-http://www.citsci.earth/join-us.html
+http://www.citsci.earth
